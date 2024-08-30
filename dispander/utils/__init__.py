@@ -22,12 +22,12 @@ def compose_embed(message):
     )
     embed.set_author(
         name=message.author.display_name,
-        icon_url=message.author.avatar.url,
+        icon_url=message.author.avatar.url if message.author.avatar else None,
         url=message.jump_url
     )
     embed.set_footer(
         text=message.channel.name,
-        icon_url=message.guild.icon.url,
+        icon_url=message.guild.icon.url if message.guild.icon else None,
     )
     if message.attachments and message.attachments[0].proxy_url:
         embed.set_image(
@@ -64,7 +64,7 @@ async def dispand(message):
         if hasattr(main_embed.author.icon, "url"):
             icon_url = main_embed.author.icon.url
         else:
-            icon_url = EmptyEmbed
+            icon_url = None
         main_embed.set_author(
             name=getattr(main_embed.author, "name", None),
             icon_url=icon_url,
