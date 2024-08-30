@@ -10,7 +10,7 @@ regex_discord_message_url = (
 regex_extra_url = (
     r'\?base_aid=(?P<base_author_id>[0-9]{17,20})'
     '&aid=(?P<author_id>[0-9]{17,20})'
-    '&extra=(?P<extra_messages>(|[0-9,]+))'
+    '&extra=(?P<extra_messages>([0-9,]+)?)'
 )
 DELETE_REACTION_EMOJI = os.environ.get("DELETE_REACTION_EMOJI", "\U0001f5d1")
 
@@ -39,27 +39,26 @@ def compose_embed(message):
 async def dispand(message):
     messages = await extract_message(message)
     for m in messages:
-        sent_messages = []
-
-        if m.content or m.attachments:
-            sent_message = await message.channel.send(embed=compose_embed(m))
-            sent_messages.append(sent_message)
-        # Send the second and subsequent attachments with embed (named 'embed') respectively:
+        main_embed = compose_embed(m)
+        attachment_embeds = []
         for attachment in m.attachments[1:]:
             embed = discord.Embed()
             embed.set_image(
                 url=attachment.proxy_url
             )
-            sent_attachment_message = await message.channel.send(embed=embed)
-            sent_messages.append(sent_attachment_message)
-
-        for embed in m.embeds:
-            sent_embed_message = await message.channel.send(embed=embed)
-            sent_messages.append(sent_embed_message)
+            attachment_embeds.append(embed)
+        all_embeds = [main_embed] + attachment_embeds + m.embeds
+        # all_embedsを10個ずつに分割
+        embed_groups = [all_embeds[i: i+10] for i in range(0, len(all_embeds), 10)]
+        sent_messages = []
+        for embeds in embed_groups:
+            sent_message = await message.channel.send(embeds=embeds)
+            sent_messages.append(sent_message)
 
         # 一番先頭のメッセージにゴミ箱のリアクションをつける
         main_message = sent_messages.pop(0)
-        main_embed = main_message.embeds[0]
+        main_embeds = main_message.embeds
+        main_embed = main_embeds[0]
         await main_message.add_reaction(DELETE_REACTION_EMOJI)
         if hasattr(main_embed.author.icon, "url"):
             icon_url = main_embed.author.icon.url
@@ -70,7 +69,7 @@ async def dispand(message):
             icon_url=icon_url,
             url=make_jump_url(message, m, sent_messages)
         )
-        await main_message.edit(embed=main_embed)
+        await main_message.edit(embeds=main_embeds)
 
 
 async def extract_message(message):
