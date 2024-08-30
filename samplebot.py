@@ -9,7 +9,6 @@ class MyBot(commands.Bot):
             command_prefix='$',
             help_command=None,
             intents=discord.Intents.all(),
-            application_id=getenv('APPLICATION_ID'),
         )
 
     async def setup_hook(self):
