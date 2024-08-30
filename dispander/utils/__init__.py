@@ -2,7 +2,6 @@ import os
 import re
 from typing import Optional
 import discord
-from discord.embeds import EmptyEmbed
 
 regex_discord_message_url = (
     '(?!<)https://(ptb.|canary.)?discord(app)?.com/channels/'
